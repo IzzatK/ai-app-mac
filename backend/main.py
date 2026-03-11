@@ -195,17 +195,7 @@ app = FastAPI(
     description="A simple API for text generation using a local LLM"
 )
 #localhost 8000
-@app.post("/generate", response_model=GenerationResponse)
-async def generate_text(request: PromptRequest):
-    # The pipeline call itself is synchronous, but the endpoint is async
-    # In a real-world scenario with large models, you might offload this
-    generated_text_list = nlp(
-        request.prompt,
-        max_length=request.max_length,
-        num_return_sequences=1
-    )
-    generated_text = generated_text_list[0]["generated_text"]
-    return GenerationResponse(generated_text=generated_text)
+
 #instructions:
 #open venv python virtual terminal and then type uvicorn main:app --reload to run main.python
 #ollama run llama3 in a terminal
