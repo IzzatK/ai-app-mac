@@ -111,4 +111,6 @@ async def upload_file(
     return {
         "policy_url": url1,
         "regulation_url": url2
+        "file1_id": db_file1.id,
+        "file2_id": db_file2.id
     }
