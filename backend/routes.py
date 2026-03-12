@@ -30,18 +30,38 @@ async def generate_text(request: PromptRequest):
     generated_text = generated_text_list[0]["generated_text"]
     return GenerationResponse(generated_text=generated_text)
 
+#take PDF ids as inputs here, and place them inside the parameters for getInpuPDFs
 @router.post("/analyze")
 def analyze():
+    # pdf_url1 = db_record.s3_url
+
+    # response = requests.get(pdf_url1)
+
+    # with open("temp1.pdf", "wb") as f:
+    #     f.write(response.content)
+
+    # text = extract_text_from_pdf("temp1.pdf")
+    # # pdf_url2 = db_record.s3_url
+
+    # response = requests.get(pdf_url2)
+
+    # with open("temp2.pdf", "wb") as f:
+    #     f.write(response.content)
+
+    # text = extract_text_from_pdf("temp2.pdf")
+    #pdf_1, pdf_2 = getInputPDFs("temp1.pdf", "temp2.pdf")
     pdf_content, pdf_content2 = getPDFs()
     cleanedtext = clean_text(pdf_content)
     cleanedtext_reg = clean_text(pdf_content2)
     policy_chunks = get_chunks(cleanedtext)
     regulation_chunks = get_chunks(cleanedtext_reg)
     policy_vectors = get_vectors(policy_chunks)
-    regulation_vectors = get_vectors(regulation_chunks)
+    faiss.normalize_L2(policy_vectors)
+    # faiss.normalize_L2(regulation_vectors)    
     index = build_faiss_index(policy_vectors)
     
     report = []
+    #maybe make report into an object
     for reg_chunk in regulation_chunks:
         reg_vec = model.encode([reg_chunk])
         D, I = index.search(np.array(reg_vec), k=3)
@@ -56,4 +76,9 @@ def analyze():
     
     return {"report": report}
 
-    
+# @router.post("/upload")
+# async def upload_file(file: UploadFile = File(...)):
+#     contents = await file.read()
+#     with open(file.filename, "wb") as f:
+#         f.write(contents)
+#     return {"filename": file.filename}

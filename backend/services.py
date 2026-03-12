@@ -11,6 +11,7 @@ import numpy as np
 import ollama
 import psycopg2
 
+model = SentenceTransformer("all-mpnet-base-v2")
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -24,8 +25,14 @@ def getPDFs():
     pdf_content2 = extract_text_from_pdf("example-2.pdf")
     return pdf_content, pdf_content2
 
+def getInputPDFs(pdf1, pdf2):
+    pdf_content_1 = extract_text_from_pdf(pdf1)
+    pdf_content_2 = extract_text_from_pdf(pdf2)
+    return pdf_content_1, pdf_content_2
+#grab the PDFs from BackEnd folder using its postgresSQL primary key ID sent in to this above function from Redux, extract text, clean it, chunk it, vectorize it, build a faiss index, then retrieve top policy chunks for each regulation chunk and send them to an LLM to compare and analyze
+#When the user saves a PDF into postgresSQL, we don't exec getInputPDFs. We exec it only when the user execs the POST analyze controller endpoint
 pdf_content, pdf_content2 = getPDFs()
-# word_count = len(pdf_content.split())
+# change it to getInputPDFs(pdf1, pdf2) when you want to use the function that takes in pdfs as input
 
 # is_over_500 = word_count > 500
 # print(is_over_500)
@@ -43,52 +50,19 @@ def get_chunks(text, chunk_size=400, chunk_overlap=50):
     )
     chunks = text_splitter.split_text(text)
     return chunks
-cleanedtext = clean_text(pdf_content)
-cleanedtext_reg = clean_text(pdf_content2)
 
-policy_chunks = get_chunks(cleanedtext)
-regulation_chunks = get_chunks(cleanedtext_reg)
 
 def get_vectors(chunks):
     model = SentenceTransformer("all-mpnet-base-v2")
     vectors = model.encode(chunks)
     return vectors
-model = SentenceTransformer("all-mpnet-base-v2")
-policy_vectors = get_vectors(policy_chunks)
-regulation_vectors = get_vectors(regulation_chunks)
 
 def build_faiss_index(vectors):
     dimension = vectors[0].shape[0]
     index = faiss.IndexFlatL2(dimension)
     index.add(np.array(vectors))
     return index
-faiss.normalize_L2(policy_vectors)
-faiss.normalize_L2(regulation_vectors)
-# dimension = policy_vectors[0].shape[0]
-# index = faiss.IndexFlatL2(dimension)
-index = build_faiss_index(policy_vectors)
 
-
-
-
-#retrive top policy chunks, send them to an LLM to compare with regulation chunks
-def get_reg_vec(chunks):
-    reg_vec = model.encode(chunks)
-    return reg_vec
-
-reg_vec = get_reg_vec(regulation_chunks)
-
-def get_D_I(reg_vec):
-    D, I = index.search(np.array(reg_vec), k=3)
-    return D, I
-
-D, I = get_D_I(reg_vec)
-
-def get_top_policy_chunks(I):
-    top_policy_chunks = [policy_chunks[i] for i in I[0]]
-    return top_policy_chunks
-
-top_policy_chunks = get_top_policy_chunks(I)
 
 def build_prompt(regulation_ch, policy_ch):
 
@@ -124,7 +98,7 @@ If NON-COMPLIANT, suggest what policy change is required.
 def get_prompt(regulation_chunks, top_policy_chunks):
      prompt = build_prompt(regulation_chunks[0], top_policy_chunks)
      return prompt
-prompt = build_prompt(regulation_chunks, top_policy_chunks)
+# prompt = build_prompt(regulation_chunks, top_policy_chunks)
 
 def get_analysis(prompt):
     response = ollama.chat(

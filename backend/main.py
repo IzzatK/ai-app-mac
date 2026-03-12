@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 from transformers import pipeline
@@ -24,6 +25,16 @@ app = FastAPI(
 )
 
 app.include_router(router)
+#    allow_origins=["http://localhost:3000"],
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 try:
     connection = psycopg2.connect(
