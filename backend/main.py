@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sqlmodel import SQLModel
 from typing import Optional
 from transformers import pipeline
 from routes import router
@@ -12,6 +13,8 @@ import faiss
 import numpy as np
 import ollama
 import psycopg2
+from database import engine
+from models import Files
 
 
 
@@ -34,7 +37,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+cursor = None
 
+
+SQLModel.metadata.create_all(engine)
 
 try:
     connection = psycopg2.connect(
@@ -45,6 +51,7 @@ try:
         port="5432" # Default port is 5432
     )
     print("Connected to the PostgreSQL server successfully!")
+    cursor = conn.cursor()
 
 except (psycopg2.DatabaseError, Exception) as error:
     print(f"Error connecting to the database: {error}")
@@ -59,3 +66,4 @@ finally:
 #instructions:
 #open venv python virtual terminal and then type uvicorn main:app --reload to run main.python
 #ollama run llama3 in a terminal
+#to push changes run git push -u origin current

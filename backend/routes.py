@@ -1,6 +1,9 @@
 from services import build_faiss_index, build_prompt, clean_text, extract_text_from_pdf, get_chunks, get_vectors, getPDFs
-from models import GenerationResponse, PromptRequest
-from fastapi import APIRouter, UploadFile, File
+from models import GenerationResponse, PromptRequest, Files
+from fastapi import APIRouter, UploadFile, File, Depends
+from typing import Annotated
+from sqlmodel import Session
+from database import get_session
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from transformers import pipeline
@@ -9,8 +12,11 @@ import faiss
 import numpy as np
 import ollama
 import re
+import boto3
 
-
+SessionDep = Annotated[Session, Depends(get_session)]
+s3 = boto3.client('s3')
+ 
 router = APIRouter()
 try:
     nlp = pipeline("text-generation", model="gpt2")
@@ -76,9 +82,33 @@ def analyze():
     
     return {"report": report}
 
-# @router.post("/upload")
-# async def upload_file(file: UploadFile = File(...)):
-#     contents = await file.read()
-#     with open(file.filename, "wb") as f:
-#         f.write(contents)
-#     return {"filename": file.filename}
+@router.post("/upload")
+async def upload_file(
+    file1: UploadFile = File(...),
+    file2: UploadFile = File(...),
+    session: Session = Depends(get_session)
+):
+    bucket_name = "izzat-demo-s3-v1"
+
+    # Upload to S3
+    s3.upload_fileobj(file1.file, bucket_name, file1.filename)
+    s3.upload_fileobj(file2.file, bucket_name, file2.filename)
+
+    url1 = f"https://{bucket_name}.s3.amazonaws.com/{file1.filename}"
+    url2 = f"https://{bucket_name}.s3.amazonaws.com/{file2.filename}"
+
+    # Create SQLModel objects
+    db_file1 = Files(filename=file1.filename, s3url=url1)
+    db_file2 = Files(filename=file2.filename, s3url=url2)
+
+    # Add to DB
+    session.add(db_file1)
+    session.add(db_file2)
+    session.commit()  # don't forget commit to actually insert
+    session.refresh(db_file1)
+    session.refresh(db_file2)
+
+    return {
+        "policy_url": url1,
+        "regulation_url": url2
+    }

@@ -1,16 +1,18 @@
 from sqlalchemy import Column, Integer, String, DateTime
-from database import Base
 import datetime
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Annotated, Optional
 
-class User(Base):
-    __tablename__ = 'users'
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), nullable=False)
-    email = Column(String(50), unique=True, nullable=False)
-    password = Column(String(50), nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+from fastapi import Depends, FastAPI, HTTPException, Query
+from sqlmodel import Field, Session, SQLModel, create_engine, select
+
+class Files(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    filename: str = Field(index=True)
+    s3url: str = Field(index=True)
+
+# Code below omitted 👇
+
 
 class PromptRequest(BaseModel):
     prompt: str = Field(..., min_length=1)
