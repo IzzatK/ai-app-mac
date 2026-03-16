@@ -67,3 +67,4 @@ finally:
 #open venv python virtual terminal and then type uvicorn main:app --reload to run main.python
 #ollama run llama3 in a terminal
 #to push changes run git push -u origin current
+#git push origin master inside of my-ai-app directory to push frontend changes

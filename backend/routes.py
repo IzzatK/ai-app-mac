@@ -13,6 +13,7 @@ import numpy as np
 import ollama
 import re
 import boto3
+import uuid
 
 SessionDep = Annotated[Session, Depends(get_session)]
 s3 = boto3.client('s3')
@@ -89,13 +90,14 @@ async def upload_file(
     session: Session = Depends(get_session)
 ):
     bucket_name = "izzat-demo-s3-v1"
+    unique_name1 = f"{uuid.uuid4()}_{file1.filename}"
+    unique_name2 = f"{uuid.uuid4()}_{file2.filename}"
 
-    # Upload to S3
-    s3.upload_fileobj(file1.file, bucket_name, file1.filename)
-    s3.upload_fileobj(file2.file, bucket_name, file2.filename)
+    s3.upload_fileobj(file1.file, bucket_name, unique_name1)
+    s3.upload_fileobj(file2.file, bucket_name, unique_name2)
 
-    url1 = f"https://{bucket_name}.s3.amazonaws.com/{file1.filename}"
-    url2 = f"https://{bucket_name}.s3.amazonaws.com/{file2.filename}"
+    url1 = f"https://{bucket_name}.s3.amazonaws.com/{unique_name1}"
+    url2 = f"https://{bucket_name}.s3.amazonaws.com/{unique_name2}"
 
     # Create SQLModel objects
     db_file1 = Files(filename=file1.filename, s3url=url1)
