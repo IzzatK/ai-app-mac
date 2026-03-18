@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, Session
-from typing import Annotated
 from fastapi import Depends
 
 DATABASE_URL = "postgresql+psycopg2://postgres:getlucky15@localhost:5432/postgres"

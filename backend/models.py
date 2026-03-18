@@ -1,15 +1,20 @@
 from sqlalchemy import Column, Integer, String, DateTime
 import datetime
 from pydantic import BaseModel, Field
-from typing import Annotated, Optional
-
+from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
+#windows version 
+# class Files(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     filename: str = Field(index=True)
+#     s3url: str = Field(index=True)
+
 class Files(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    filename: str = Field(index=True)
-    s3url: str = Field(index=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    filename: str
+    s3url: str
 
 # Code below omitted 👇
 

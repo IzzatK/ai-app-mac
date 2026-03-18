@@ -1,7 +1,8 @@
 from services import build_faiss_index, build_prompt, clean_text, extract_text_from_pdf, get_chunks, get_vectors, getPDFs
 from models import GenerationResponse, PromptRequest, Files
 from fastapi import APIRouter, UploadFile, File, Depends
-from typing import Annotated
+# from typing import Annotated
+from typing_extensions import Annotated
 from sqlmodel import Session
 from database import get_session
 from langchain_text_splitters import RecursiveCharacterTextSplitter

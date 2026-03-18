@@ -43,15 +43,25 @@ cursor = None
 SQLModel.metadata.create_all(engine)
 
 try:
-    connection = psycopg2.connect(
-        host="localhost",
-        database="postgres",
-        user="postgres",
-        password="getlucky15",
-        port="5432" # Default port is 5432
-    )
-    print("Connected to the PostgreSQL server successfully!")
-    cursor = conn.cursor()
+   connection = psycopg2.connect(
+       host="localhost",
+       database="postgres",
+       user="postgres",
+       password="getlucky15",
+       port="5432" # Default port is 5432
+   )
+   print("Connected to the PostgreSQL server successfully!")
+   cursor = conn.cursor()
+
+# try:
+#    connection = psycopg2.connect(
+#        host="localhost",
+#        database="postgres",
+#        user="izzatkhadim",
+#        port="5432" # Default port is 5432
+#    )
+#    print("Connected to the PostgreSQL server successfully!")
+
 
 except (psycopg2.DatabaseError, Exception) as error:
     print(f"Error connecting to the database: {error}")
@@ -68,3 +78,26 @@ finally:
 #ollama run llama3 in a terminal
 #to push changes run git push -u origin current
 #git push origin master inside of my-ai-app directory to push frontend changes
+
+#on mac in backend folder:
+#izzatkhadim@izzats-Mac-mini backend % python3 -m venv venv
+#izzatkhadim@izzats-Mac-mini backend % source venv/bin/activate
+#pg_ctl -D /usr/local/var/postgres start in a new terminal
+#psql postgres
+#✅ Next step — connect to it
+
+#Run:
+
+#psql postgres
+
+#You should see:
+
+#postgres=#
+
+
+#-- List databases
+#\l
+
+#-- Switch database
+#\c mydb
+
