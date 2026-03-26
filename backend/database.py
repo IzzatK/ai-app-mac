@@ -5,6 +5,7 @@ from sqlmodel import SQLModel, Session
 from fastapi import Depends
 
 DATABASE_URL = "postgresql+psycopg2://postgres:getlucky15@localhost:5432/postgres"
+#refers to a DB called postgres with password getlucky15
 engine = create_engine(DATABASE_URL, echo=True)
 
 Base = declarative_base()

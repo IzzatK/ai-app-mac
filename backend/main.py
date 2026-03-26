@@ -79,25 +79,50 @@ finally:
 #to push changes run git push -u origin current
 #git push origin master inside of my-ai-app directory to push frontend changes
 
+#on mac to setup postgres or start:
+#brew install postgresql
+#initdb /usr/local/var/postgres for intel macs
+#initdb /opt/homebrew/bin/brew for silicon m1 macs
+#if previous initdb commands return an error try these lines:
+#pg_ctl -D /usr/local/var/postgres start for intel macs
+#pg_ctl -D /opt/homebrew/var/postgres start for silicon m1 macs
+#psql postgres to test it is working
+#create a user izzatkhadim and make him the admin of db named postgres
+
+#on mac also install awscli using the .pkg installer 
+
 #on mac in backend folder:
 #izzatkhadim@izzats-Mac-mini backend % python3 -m venv venv
 #izzatkhadim@izzats-Mac-mini backend % source venv/bin/activate
-#pg_ctl -D /usr/local/var/postgres start in a new terminal
-#psql postgres
+#in another terminal:
 #✅ Next step — connect to it
 
-#Run:
 
 #psql postgres
 
 #You should see:
 
 #postgres=#
-
+# createdb postgres
 
 #-- List databases
 #\l
 
 #-- Switch database
-#\c mydb
+#\c postgres
+#or postgres
+#then create table/schema with this model
+# CREATE TABLE Files (
+#     id SERIAL PRIMARY KEY,
+#     filename TEXT NOT NULL,
+#     s3url TEXT NOT NULL,
+#     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+# );
+#run \dt to confirm Files table/schema was created
 
+#if you get error 'role posrgres does not exist' then exec these commands
+# Option 2 - Create a postgres role with password
+
+# Find your macOS username:
+# psql postgres
+# CREATE ROLE postgres WITH LOGIN PASSWORD 'getlucky15' SUPERUSER CREATEDB;

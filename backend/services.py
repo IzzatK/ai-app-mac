@@ -43,13 +43,94 @@ def clean_text(text):
     text = text.strip()
     return text
 
-def get_chunks(text, chunk_size=400, chunk_overlap=50):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap
+
+def auto_sectionize(text):
+    # Split on periods that end real sentences
+    sentences = re.split(r'(?<=[.?!])\s+', text)
+    sections = [f"<SECTION>\n{s}\n</SECTION>" for s in sentences if len(s.strip()) > 0]
+    return "\n".join(sections)
+
+def sectionize_regulations(text):
+    # Split on any pattern like:
+    # Regulation 1:
+    # Section 4.2
+    # 1)
+    # • Something
+    lines = re.split(r'(?:Regulation\s*\d+[:.]|Section\s*\d+[:.]|\n\d+[.)]\s*)', text)
+
+    sections = []
+    for line in lines:
+        clean = line.strip()
+        if len(clean) > 0:
+            sections.append(clean)
+
+    return sections
+def extract_regulations(text):
+    """
+    Splits the regulation document into numbered regulations.
+    Works for formats like:
+    - Regulation 1:
+    - Reg 2.
+    - 1)
+    - 2.
+    - Section 3:
+    - etc
+    """
+
+    # Normalize line breaks
+    text = text.replace("\r", "\n")
+
+    # Pattern to match regulation headings
+    pattern = r"(Regulation\s*\d+[:.]|Reg\s*\d+[:.]|\b\d+[.)]\s+)"
+
+    # Find all matches
+    matches = list(re.finditer(pattern, text, flags=re.IGNORECASE))
+
+    regulations = []
+
+    for i in range(len(matches)):
+        start = matches[i].start()
+
+        if i + 1 < len(matches):
+            end = matches[i+1].start()
+        else:
+            end = len(text)
+
+        section = text[start:end].strip()
+
+        if len(section) > 0:
+            regulations.append(section)
+
+    return regulations
+
+
+def split_into_clauses(text):
+    # Split on sentences that end with periods
+    clauses = re.split(r'(?<=[.?!])\s+(?=[A-Z])', text)
+    return [c.strip() for c in clauses if len(c.strip()) > 0]
+
+# def get_chunks(text, chunk_size=400, chunk_overlap=75):
+#     text_splitter = RecursiveCharacterTextSplitter(
+#         chunk_size=chunk_size,
+#         chunk_overlap=chunk_overlap
+#     )
+#     chunks = text_splitter.split_text(text)
+#     return chunks
+
+def get_chunks(text):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=100,
+        separators=[
+            "\n\n",     # paragraph
+            "\n",       # line
+            ". ",       # sentence
+            "; ",
+            ", ",
+            " "         # fallback
+        ],
     )
-    chunks = text_splitter.split_text(text)
-    return chunks
+    return splitter.split_text(text)
 
 
 def get_vectors(chunks):
@@ -70,25 +151,13 @@ def build_prompt(regulation_ch, policy_ch):
         [f"Policy {i+1}: {chunk}" for i, chunk in enumerate(policy_ch)]
     )
 
-    prompt = f"""
-You are a regulatory compliance expert.
-
-Regulation:
-{regulation_ch}
-
-Company Policies:
-{policy_text}
-
-Determine whether the company policies satisfy the regulation.
-
-Respond with:
-
-Compliance Status: COMPLIANT or NON-COMPLIANT
-
-Explanation: Explain why.
-
-If NON-COMPLIANT, suggest what policy change is required.
-"""
+    prompt = (
+            "You are a compliance analyst. "
+            "For each regulation below, answer 'Compliant' only if it explicitly is satisfied by a policy or multiple policies. "
+            "Otherwise, answer 'Non-Compliant'. Make sure the first words of your analysis is either compliant or non compliant, followed by an explanation.\n\n"
+            f"Regulation: {regulation_ch}\n\n"
+            f"Policies:{policy_text}\n"
+        )
 
     return prompt
 

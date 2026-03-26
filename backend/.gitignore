@@ -1,0 +1,4 @@
+venv/
+../frontend/
+/venv/
+venv/bin/Activate.ps1

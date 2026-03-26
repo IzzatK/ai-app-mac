@@ -14,7 +14,7 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select
 class Files(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str
-    s3url: str
+    s3key: str
 
 # Code below omitted 👇
 
@@ -25,3 +25,7 @@ class PromptRequest(BaseModel):
 
 class GenerationResponse(BaseModel):
     generated_text: str
+
+class AnalyzeRequest(BaseModel):
+    item_id: int
+    item_id2: int
