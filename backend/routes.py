@@ -1,5 +1,5 @@
-from services import auto_sectionize, build_faiss_index, build_prompt, clean_text, extract_regulations, extract_text_from_pdf, get_chunks, get_vectors, getPDFs, getInputPDFs, split_into_clauses
-from models import GenerationResponse, PromptRequest, Files, AnalyzeRequest
+from services import auto_sectionize, build_faiss_index, build_prompt, clean_text, extract_regulations, extract_text_from_pdf, get_chunks, get_vectors, getPDFs, getInputPDFs, split_into_clauses, second_prompt
+from models import GenerationResponse, PromptRequest, Files, AnalyzeRequest, AnalyzeResponse
 from fastapi import APIRouter, UploadFile, File, Depends
 from typing_extensions import Annotated
 from typing import Optional
@@ -41,7 +41,11 @@ async def generate_text(request: PromptRequest):
 
 #take PDF ids as inputs here, and place them inside the parameters for getInpuPDFs
 @router.post("/analyze")
-def analyze(data: AnalyzeRequest, session: Session = Depends(get_session)):
+async def analyze(data: AnalyzeRequest, session: Session = Depends(get_session)):
+
+    return await run_in_threadpool(run_analysis, data, session)
+    
+def run_analysis(data, session):
 
     # get DB rows
     item = session.get(Files, data.item_id)
@@ -111,6 +115,39 @@ def analyze(data: AnalyzeRequest, session: Session = Depends(get_session)):
         report.append({"regulation": reg_chunk, "analysis": result})
     
     return {"report": report}
+
+@router.post("/responseanalyze")
+async def second_analysis(data: AnalyzeResponse):
+    """
+    Takes a single non-compliant regulation + analysis from the frontend,
+    sends it to an Ollama model (Llama 3), and returns a rewritten or
+    improved compliance recommendation list.
+    """
+
+    # Build the prompt
+    prompt = second_prompt(data.analysis, data.regulation)
+
+    # Call the local Ollama model
+    response = ollama.chat(
+        model="llama3",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    # Strongly recommended: safe extraction
+    result = response.get("message", {}).get("content", "")
+
+    # Enforce consistent API shape for frontend
+    return {
+        "report": [
+            {
+                "regulation": data.regulation,
+                "analysis": result  # enhanced compliance guidance
+            }
+        ]
+    }
+    
 
 @router.post("/upload")
 async def upload_file(

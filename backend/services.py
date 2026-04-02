@@ -161,10 +161,32 @@ def build_prompt(regulation_ch, policy_ch):
 
     return prompt
 
+def second_prompt(analysis, regulation):
+    return f"""
+You are a compliance expert specializing in federal and local law.
+
+The organization has violated the following regulation:
+
+REGULATION:
+{regulation}
+
+CURRENT ANALYSIS OF NON-COMPLIANCE:
+{analysis}
+
+Write a clear list of steps the organization must take to become fully compliant.
+Ensure recommendations are:
+- practical
+- legally grounded
+- actionable
+- written at a 12th grade level
+- no more than 8 bullet points
+- start with the word high, medium, or low based on its priority to achieve regulation compliancy
+"""
 
 # client = OpenAI(api_key="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")
 
 def get_prompt(regulation_chunks, top_policy_chunks):
+     
      prompt = build_prompt(regulation_chunks[0], top_policy_chunks)
      return prompt
 # prompt = build_prompt(regulation_chunks, top_policy_chunks)

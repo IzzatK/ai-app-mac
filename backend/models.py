@@ -29,3 +29,7 @@ class GenerationResponse(BaseModel):
 class AnalyzeRequest(BaseModel):
     item_id: int
     item_id2: int
+
+class AnalyzeResponse(BaseModel):
+    analysis: str
+    regulation: str
